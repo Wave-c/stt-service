@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette import status
 from services.stt_service import *
 from starlette.responses import Response
-from moviepy import *
+import ffmpeg
 
 app = FastAPI()
 
@@ -22,9 +22,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def convert_webm_to_wav(data:bytes):
-    clip = DataVideoClip(data)
-    clip.write_audiofile("buffer.wav", codec='wav')
+def convert_webm_to_wav():
+    ffmpeg.input("buffer.webm")
+    ffmpeg.output("buffer.wav")
 
 @app.websocket("/api/ws")
 async def websocket_endpoint(websocket : WebSocket):
@@ -38,8 +38,12 @@ async def websocket_endpoint(websocket : WebSocket):
 @app.post("/api/audio")
 async def audio_endpoint(audio : UploadFile):
     data = (await audio.read())
-    # print(data)
-    resp = speach_to_text_func(data)
+    with open("buffer.wav", "wb") as wb:
+        wb.write(data)
+    # # print(data)
+    # with open("buffer.wav", "rb") as rb:
+    #     data = rb.read()
+    resp = speach_to_text_func1()
     print(f"message: {resp}")
 
 @app.get("/api/health")
